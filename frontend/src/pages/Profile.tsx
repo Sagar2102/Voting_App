@@ -34,9 +34,10 @@ import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
 import { UserProfile } from "@/utils/types/types";
 
-import { BASE_URL } from "../../envConstants";
+// import { BASE_URL } from "../../envConstants";
 import { CandidateFormData, candidateSchema } from "@/utils/formsSchema";
 import ForgetPasswordDialog from "@/components/forget-pass-dialog";
+const BASE_URL = "http://localhost:3001";
 
 const URL = `${BASE_URL}/user/profile`;
 

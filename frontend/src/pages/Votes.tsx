@@ -10,7 +10,8 @@ import {
 import SkeletonLoader from "@/components/skeletonLoader";
 import axios from "axios";
 import { VoteRecord } from "@/utils/types/types";
-import { BASE_URL } from "../../envConstants";
+// import { BASE_URL } from "../../envConstants";
+const BASE_URL = "http://localhost:3001";
 
 const URL = `${BASE_URL}/candidate/vote/count`;
 

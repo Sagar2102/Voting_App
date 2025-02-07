@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/table";
 import { Candidate } from "@/utils/types/types";
 import { useQuery } from "@tanstack/react-query";
-import { BASE_URL } from "../../envConstants";
+// import { BASE_URL } from "../../envConstants";
+const BASE_URL = "http://localhost:3001";
 import SkeletonLoader from "@/components/skeletonLoader";
 import { LoaderCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";

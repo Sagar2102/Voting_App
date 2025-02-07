@@ -1,4 +1,5 @@
-import { BASE_URL } from "../../envConstants";
+// import { BASE_URL } from "../../envConstants";
+const BASE_URL = "http://localhost:3001";
 import { useQuery } from "@tanstack/react-query";
 import {
   Table,

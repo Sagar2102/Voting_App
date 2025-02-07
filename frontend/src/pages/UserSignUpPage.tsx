@@ -25,12 +25,14 @@ import { userSignupFormSchema } from "@/utils/formsSchema";
 import { useToast } from "@/components/ui/use-toast";
 import { useMutation } from "@tanstack/react-query";
 
-import { BASE_URL } from "../../envConstants";
-
-const URL = `${BASE_URL}/candidate/vote/count`;
+// Define API Base URL
+const BASE_URL = "http://localhost:3001";
+const SIGNUP_URL = `${BASE_URL}/user/signup`;
 
 export default function UserSignUpPage() {
   const { toast } = useToast();
+
+  // React Hook Form Setup
   const form = useForm<z.infer<typeof userSignupFormSchema>>({
     resolver: zodResolver(userSignupFormSchema),
     defaultValues: {
@@ -38,26 +40,31 @@ export default function UserSignUpPage() {
       age: "",
       cnicNumber: "",
       password: "",
-      mobileNumber: "",
+      mobile: "",
       email: "",
       address: "",
     },
   });
 
   type ErrorType = {
-    response: {
-      status: number;
+    response?: {
+      status?: number;
+      data?: {
+        error?: string;
+      };
     };
   };
 
+  // Mutation for API Call
   const mutation = useMutation({
     mutationFn: async (values: z.infer<typeof userSignupFormSchema>) => {
       const formattedValues = {
         ...values,
-        age: parseInt(values.age),
+        age: parseInt(values.age), // Convert age to number
+        cnicNumber: parseInt(values.cnicNumber), // Convert CNIC to number
       };
 
-      const res = await axios.post(`${URL}/user/signup`, formattedValues, {
+      const res = await axios.post(SIGNUP_URL, formattedValues, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -72,10 +79,12 @@ export default function UserSignUpPage() {
       form.reset();
     },
     onError: (error: ErrorType) => {
+      const errorMessage = error.response?.data?.error || "Can't Signup, try again!";
       toast({
         variant: "destructive",
-        description: "Can't Signup, try again!",
+        description: errorMessage,
       });
+
       if (error.response?.status === 409) {
         toast({
           variant: "destructive",
@@ -95,7 +104,7 @@ export default function UserSignUpPage() {
         <CardHeader>
           <CardTitle>Sign Up</CardTitle>
           <CardDescription>
-            You can signup into the e-voting app by filling these basic info.
+            You can sign up into the e-voting app by filling in these basic details.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -110,7 +119,7 @@ export default function UserSignUpPage() {
                     <FormControl>
                       <Input placeholder="Masab Bin Zia" {...field} />
                     </FormControl>
-                    <FormMessage className="font-bold" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -123,20 +132,20 @@ export default function UserSignUpPage() {
                     <FormControl>
                       <Input placeholder="79" type="number" {...field} />
                     </FormControl>
-                    <FormMessage className="font-bold" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
               <FormField
                 control={form.control}
-                name="mobileNumber"
+                name="mobile"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Mobile Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="1234567891" {...field} />
+                      <Input placeholder="9876543210" {...field} />
                     </FormControl>
-                    <FormMessage className="font-bold" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -147,9 +156,9 @@ export default function UserSignUpPage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="example@gmail.com" {...field} />
+                      <Input placeholder="randomemail123@gmail.com" {...field} />
                     </FormControl>
-                    <FormMessage className="font-bold" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -160,12 +169,9 @@ export default function UserSignUpPage() {
                   <FormItem>
                     <FormLabel>Address</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="123 Example Street, City, Country"
-                        {...field}
-                      />
+                      <Input placeholder="456 Random Street, SomeCity, SomeCountry" {...field} />
                     </FormControl>
-                    <FormMessage className="font-bold" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -176,9 +182,9 @@ export default function UserSignUpPage() {
                   <FormItem>
                     <FormLabel>CNIC Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="123456789012" {...field} />
+                      <Input placeholder="987654321098" {...field} />
                     </FormControl>
-                    <FormMessage className="font-bold" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -189,32 +195,23 @@ export default function UserSignUpPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="********"
-                        {...field}
-                        type="password"
-                      />
+                      <Input placeholder="********" type="password" {...field} />
                     </FormControl>
-                    <FormMessage className="font-bold" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
+              
               {mutation.isError && (
                 <p className="text-red-500">
-                  {(mutation.error as any)?.response?.data?.error ||
-                    "An unexpected error occurred"}
+                  {mutation.error instanceof Error
+                    ? mutation.error.message
+                    : "An unexpected error occurred"}
                 </p>
               )}
-              <Button
-                type="submit"
-                className="w-full my-4"
-                disabled={mutation.isPending}
-              >
-                {mutation.isPending ? (
-                  <LoaderCircle className="animate-spin" />
-                ) : (
-                  "Sign Up"
-                )}
+
+              <Button type="submit" className="w-full my-4" disabled={mutation.isPending}>
+                {mutation.isPending ? <LoaderCircle className="animate-spin" /> : "Sign Up"}
               </Button>
               <Link
                 className={`${buttonVariants({

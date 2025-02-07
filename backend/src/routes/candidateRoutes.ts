@@ -24,11 +24,11 @@ interface AuthenticatedRequest extends Request {
 }
 
 // SignUp
-router.post("/signup", jwtAuthMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.post("/signup", async (req: AuthenticatedRequest, res: Response) => {
   try {
-    if (!(await checkAdminRole(req.user!.id))) {
-      return res.status(403).json({ message: "User has no Admin Role" });
-    }
+    // if (!(await checkAdminRole(req.user!.id))) {
+    //   return res.status(403).json({ message: "User has no Admin Role" });
+    // }
 
     const data = req.body;
     const newCandidate = new Candidate(data);

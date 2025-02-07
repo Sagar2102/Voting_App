@@ -26,95 +26,62 @@ import { useToast } from "@/components/ui/use-toast";
 import { Eye, EyeOff, LoaderCircle } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 
-import { BASE_URL } from "../../envConstants";
+const BASE_URL = "http://localhost:3001";
+const LOGIN_URL = `${BASE_URL}/user/login`;
 
-const URL = `${BASE_URL}/candidate/vote/count`;
-
-const userLoginformSchema = z.object({
+const userLoginSchema = z.object({
   cnicNumber: z.string().refine(
-    (value) => {
-      const cnicRegex = /^\d{12}$/;
-      return cnicRegex.test(value);
-    },
-    {
-      message: "CNIC number must contain exactly 12 digits.",
-    }
+    (value) => /^\d{12}$/.test(value),
+    { message: "CNIC number must be exactly 12 digits." }
   ),
-  password: z.string().min(2, {
-    message: "Enter Correct Password",
-  }),
+  password: z.string().min(2, { message: "Enter Correct Password" }),
 });
 
 export default function UserLoginPage() {
-  const [showPassword, setShowPassword] = useState("password");
+  const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const form = useForm<z.infer<typeof userLoginformSchema>>({
-    resolver: zodResolver(userLoginformSchema),
+  const form = useForm<z.infer<typeof userLoginSchema>>({
+    resolver: zodResolver(userLoginSchema),
     defaultValues: {
       cnicNumber: "",
       password: "",
     },
   });
-  type ErrorType = {
-    response: {
-      status: number;
-    };
-  };
 
   const mutation = useMutation({
-    mutationFn: async (values: z.infer<typeof userLoginformSchema>) => {
-      const res = await axios.post(`${URL}/user/login`, values);
-      const { token } = res.data;
-      localStorage.setItem("token", token);
+    mutationFn: async (values: z.infer<typeof userLoginSchema>) => {
+      const res = await axios.post(LOGIN_URL, values);
+      localStorage.setItem("token", res.data.token);
       return res.data;
     },
     onSuccess: () => {
-      toast({
-        variant: "default",
-        description: "Login Successfully.",
-      });
+      toast({ variant: "default", description: "Login Successful." });
       form.reset();
       navigate("/");
     },
-    onError: (error: ErrorType) => {
-      console.error("Error during login:", error);
+    onError: (error: any) => {
+      console.error("Login Error:", error);
       toast({
         variant: "destructive",
-        description: "Can't Login Try again!",
+        description: error?.response?.data?.message || "Login failed! Try again.",
       });
-      if (error.response?.status === 409) {
-        toast({
-          variant: "destructive",
-          description: "User already exists!",
-        });
-      }
     },
   });
 
-  const onSubmit = (values: z.infer<typeof userLoginformSchema>) => {
-    mutation.mutate(values);
-  };
-
-  const ShowPassWordHandler = () => {
-    setShowPassword((prevState) =>
-      prevState === "password" ? "text" : "password"
-    );
-  };
-
   return (
     <main className="flex justify-center items-center py-20">
-      <Card className="w-1/2 ">
+      <Card className="w-1/2">
         <CardHeader>
           <CardTitle>Login</CardTitle>
           <CardDescription>
-            You can login by entering your CNIC number and your Password.
+            Enter your CNIC number and password to log in.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form onSubmit={form.handleSubmit(mutation.mutate)} className="space-y-6">
               <FormField
                 control={form.control}
                 name="cnicNumber"
@@ -137,8 +104,8 @@ export default function UserLoginPage() {
                     <FormControl>
                       <Input
                         placeholder="*********"
+                        type={showPassword ? "text" : "password"}
                         {...field}
-                        type={showPassword}
                       />
                     </FormControl>
                     <FormMessage />
@@ -146,41 +113,24 @@ export default function UserLoginPage() {
                 )}
               />
 
-              <p
-                className={`${buttonVariants()} gap-2 flex items-center justify-center cursor-pointer`}
-                onClick={ShowPassWordHandler}
+              <button
+                type="button"
+                className={`${buttonVariants()} flex items-center gap-2 justify-center`}
+                onClick={() => setShowPassword((prev) => !prev)}
               >
-                {showPassword === "password" ? <Eye /> : <EyeOff />}
-                {showPassword === "password"
-                  ? "Show Password"
-                  : "Hide Password"}
-              </p>
+                {showPassword ? <EyeOff /> : <Eye />}
+                {showPassword ? "Hide Password" : "Show Password"}
+              </button>
 
               {mutation.isError && (
-                <p className="text-red-500">
-                  {(mutation.error as any)?.response?.data?.error ||
-                    "An unexpected error occurred"}
-                </p>
+                <p className="text-red-500">{mutation.error?.response?.data?.message || "An error occurred."}</p>
               )}
 
-              <div className="gap-2 flex flex-col justify-center items-center">
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={mutation.isPending}
-                >
-                  {mutation.isPending ? (
-                    <LoaderCircle className="animate-spin" />
-                  ) : (
-                    "Login"
-                  )}
+              <div className="flex flex-col items-center gap-2">
+                <Button type="submit" className="w-full" disabled={mutation.isPending}>
+                  {mutation.isPending ? <LoaderCircle className="animate-spin" /> : "Login"}
                 </Button>
-                <Link
-                  className={`${buttonVariants({
-                    variant: "outline",
-                  })} w-full text-center py-2 rounded-lg`}
-                  to={"/user-signup"}
-                >
+                <Link className={`${buttonVariants({ variant: "outline" })} w-full text-center py-2 rounded-lg`} to="/user-signup">
                   Sign Up
                 </Link>
               </div>
